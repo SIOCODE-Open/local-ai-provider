@@ -1,0 +1,7 @@
+services:
+  local-ai-provider:
+    image: siocode/local-ai-provider:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./local-ai-provider.config.yaml:/config.yaml:ro

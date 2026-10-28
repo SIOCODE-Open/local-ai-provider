@@ -1,0 +1,6 @@
+*.exe
+local-ai-provider
+example/
+e2e/
+.vscode/
+*.md

@@ -1,0 +1,29 @@
+port: 8080
+default_response: "Strict auth default response."
+default_responses:
+  - "Strict Fallback 1"
+  - "Strict Fallback 2"
+selection_strategy: "sequential"
+
+features:
+  chat_completions_enabled: true
+  responses_enabled: true
+  vertex_enabled: true
+  strict_models: true
+  require_auth: true
+
+models:
+  - id: "gpt-4o"
+    owned_by: "openai"
+    created: 1715367049
+  - id: "gemini-1.5-pro"
+    owned_by: "google"
+    created: 1715000000
+
+matchers:
+  - id: "strict-hello"
+    priority: 10
+    match:
+      message_contains: "hello"
+    response:
+      text: "Authenticated hello response!"

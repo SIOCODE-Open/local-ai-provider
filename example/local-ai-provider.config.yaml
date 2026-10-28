@@ -1,0 +1,72 @@
+port: 8080
+allowed_origins: "*"                                          # CORS allowed origins (optional, defaults to *)
+default_response: "I am a local AI provider default response." # Fallback response when no matcher rule matches
+selection_strategy: "sequential"                              # Response selection strategy: "sequential", "random", or "first"
+delay_ms: 0                                                   # Global artificial latency in milliseconds (optional)
+stream_chunk_delay_ms: 0                                      # Global delay between SSE chunks in milliseconds (optional)
+stream_chunk_size: 20                                         # Characters per streamed text chunk (optional, defaults to 20)
+
+# Feature flags (optional, defaults shown)
+features:
+  chat_completions_enabled: true # Enable POST /v1/chat/completions
+  responses_enabled: true        # Enable POST /v1/responses
+  vertex_enabled: true           # Enable POST /v1beta/models/{model}:generateContent & :streamGenerateContent
+  strict_models: false           # Require requested model to exist in the configured models list
+  require_auth: false            # Require Authorization Bearer token or x-goog-api-key header
+
+# Global error simulation (optional, defaults shown)
+simulated_error:
+  enabled: false
+  status_code: 500
+  message: ""
+  type: "api_error"
+  code: ""
+
+# Configured models returned by GET /v1/models
+models:
+  - id: "gpt-4o"
+    owned_by: "openai"
+    created: 1715367049
+  - id: "gpt-4o-mini"
+    owned_by: "openai"
+    created: 1721172741
+  - id: "gemini-1.5-pro"
+    owned_by: "google"
+    created: 1715000000
+
+# Request matchers (evaluated in descending priority order)
+matchers:
+  # Step 1 of tool calling: return a tool_call when the user asks for weather and tools are provided
+  - id: "weather-tool-trigger"
+    priority: 100
+    match:
+      model: "gpt-4o"
+      message_contains: "weather in San Francisco"
+      has_tools: true
+      has_tool_output: false
+    response:
+      tool_calls:
+        - id: "call_weather_1"
+          name: "get_weather"
+          arguments: '{"location":"San Francisco, CA","unit":"celsius"}'
+
+  # Step 2 of tool calling: return final assistant text when the tool output is submitted
+  - id: "weather-tool-followup"
+    priority: 110
+    match:
+      model: "gpt-4o"
+      has_tool_output: true
+      tool_output_contains: "18"
+    response:
+      text: "The current weather in San Francisco is 18°C and sunny."
+
+  # Greeting matcher with sequential round-robin responses
+  - id: "greeting-rule"
+    priority: 50
+    match:
+      message_regex: "(?i)^(hello|hi|hey)\\b"
+    response:
+      selection_strategy: "sequential"
+      responses:
+        - "Hello! How can I assist you today?"
+        - "Hi there! What can I help you build?"

@@ -1,0 +1,11 @@
+services:
+  local-ai-provider:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    volumes:
+      - ./local-ai-provider.config.yaml:/config.yaml:ro
+    ports:
+      - "${TEST_PORT:-8080}:8080"
+    environment:
+      - PORT=8080
